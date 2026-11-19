@@ -70,6 +70,31 @@ app.post("/api/v1/users", async(req,res) => {
   }
 })
 
+app.get("/api/v1/users", async(req,res) => {
+  try{
+    const result = await pool.query(`
+      SELECT * FROM users
+    `);
+
+    res.status(200).json({
+      success: true,
+      message: "All users successfully retrived",
+      data: result.rows,
+    })
+  }
+  catch(error){
+    if(error instanceof Error){
+      res.status(500).json(error);
+    }
+    else{
+      res.status(500).json({
+        success: false,
+        message: "Users can't retrived"}
+      )
+    }
+  }
+})
+
 
 app.get("/", (req: Request, res: Response) => {
   console.log(req.body);
