@@ -36,7 +36,7 @@ const initDB = async () => {
 };
 initDB();
 
-app.post("/api/v1/users", async (req, res) => {
+app.post("/api/v1/users", async(req, res) => {
   try {
     const { name, email, password, age } = req.body;
 
@@ -64,7 +64,7 @@ app.post("/api/v1/users", async (req, res) => {
   }
 });
 
-app.get("/api/v1/users", async (req, res) => {
+app.get("/api/v1/users", async(req, res) => {
   try {
     const result = await pool.query(`
       SELECT * FROM users
@@ -87,7 +87,7 @@ app.get("/api/v1/users", async (req, res) => {
   }
 });
 
-app.get("/api/v1/users/:id", async (req, res) => {
+app.get("/api/v1/users/:id", async(req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
@@ -120,6 +120,44 @@ app.get("/api/v1/users/:id", async (req, res) => {
     }
   }
 });
+
+app.put("/api/v1/users/:id", async(req,res) => {
+  try{
+    const {id} = req.params;
+    const {name, is_Active, password, age} = req.body;
+    const result = await pool.query(`
+      UPDATE users
+      SET
+      name = COALESCE($1, name),
+      password = COALESCE($2, password),
+      age = COALESCE($3, age),
+      is_Active = COALESCE($4,  is_Active),
+      updated_at = NOW()
+      WHERE id=$5 RETURNING *
+      `,
+    [name ?? null, password ?? null, age ?? null, is_Active ?? null, id]);
+
+    if (result.rowCount === 0) {
+      res.status(404).json({
+        success: false,
+        message: "User not found!!",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully!",
+      data: result.rows[0],
+    });
+  }
+  catch(error){
+    res.status(500).json({
+      success: false,
+      message: error,
+      error: error,
+    });
+  }
+})
 
 app.get("/", (req: Request, res: Response) => {
   console.log(req.body);
